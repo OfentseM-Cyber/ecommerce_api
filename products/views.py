@@ -5,6 +5,20 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import Product, Category
 from .serializers import ProductSerializer, CategorySerializer, UserSerializer
 from django.contrib.auth.models import User
+from .serializers import RegisterSerializer
+from rest_framework import status
+from rest_framework.views import APIView
+
+
+class RegisterView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({'id': user.id, 'username': user.username}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
