@@ -1,22 +1,19 @@
 from pathlib import Path
 import datetime
 import os
-from dotenv import load_dotenv
 from decouple import config
 import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load .env file if present
-load_dotenv(BASE_DIR / '.env')
+# SECRET_KEY should come from environment in production (via python-decouple)
+SECRET_KEY = config('SECRET_KEY', default='replace-this-with-env-secret-in-production')
 
-# SECRET_KEY should come from environment in production
-SECRET_KEY = os.environ.get('SECRET_KEY', 'replace-this-with-env-secret-in-production')
+# DEBUG can be toggled via env (decouple returns strings; cast manually)
+DEBUG = config('DEBUG', default='True') in ('1', 'true', 'True')
 
-# DEBUG can be toggled via env
-DEBUG = os.environ.get('DEBUG', 'True').lower() in ('1', 'true', 'yes')
-
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
+# ALLOWED_HOSTS via comma-separated env var
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',') if config('ALLOWED_HOSTS', default='') else []
 
 INSTALLED_APPS = [
     'django.contrib.admin',
