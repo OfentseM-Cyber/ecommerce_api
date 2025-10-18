@@ -1,13 +1,22 @@
 from pathlib import Path
 import datetime
+import os
+from dotenv import load_dotenv
+from decouple import config
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'replace-this-with-env-secret-in-production'
+# Load .env file if present
+load_dotenv(BASE_DIR / '.env')
 
-DEBUG = True
+# SECRET_KEY should come from environment in production
+SECRET_KEY = os.environ.get('SECRET_KEY', 'replace-this-with-env-secret-in-production')
 
-ALLOWED_HOSTS = []
+# DEBUG can be toggled via env
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ('1', 'true', 'yes')
+
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -51,12 +60,35 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ecommerce_api.wsgi.application'
 
+# Database configuration: support DATABASE_URL, then Postgres env vars, else sqlite
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL', default=''),
+        conn_max_age=600,
+        ssl_require=False,  # Set to True if deploying to Heroku
+    )
 }
+
+# If DATABASES['default'] is empty (no DATABASE_URL provided), fall back to explicit Postgres env vars or sqlite
+if not DATABASES['default']:
+    if os.environ.get('POSTGRES_DB'):
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.environ.get('POSTGRES_DB'),
+                'USER': os.environ.get('POSTGRES_USER'),
+                'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+                'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
+                'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+            }
+        }
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
