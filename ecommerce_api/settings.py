@@ -9,11 +9,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECRET_KEY should come from environment in production (via python-decouple)
 SECRET_KEY = config('SECRET_KEY', default='replace-this-with-env-secret-in-production')
 
-# DEBUG can be toggled via env (decouple returns strings; cast manually)
-DEBUG = config('DEBUG', default='True') in ('1', 'true', 'True')
+# DEBUG can be toggled via env (use decouple's cast)
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-# ALLOWED_HOSTS via comma-separated env var
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',') if config('ALLOWED_HOSTS', default='') else []
+# ALLOWED_HOSTS via comma-separated env var; default to localhost for dev
+_hosts = config('ALLOWED_HOSTS', default='127.0.0.1,localhost')
+ALLOWED_HOSTS = [h.strip() for h in _hosts.split(',') if h.strip()]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
